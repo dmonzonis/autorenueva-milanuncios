@@ -3,6 +3,7 @@
 
 from time import sleep
 from getpass import getpass
+import argparse
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -87,13 +88,34 @@ def renew_ads(driver, sleep_time=1):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', type=argparse.FileType('r'), help="read credentials from file")
+    parser.add_argument('--head', '-H', action='store_true', help="don't run in headless mode")
+    parser.add_argument('--chrome', '-c', action='store_true', help="use Chrome webdriver")
+
+    args = parser.parse_args()
+
     # Get user credentials
-    mail, password = get_credentials()
+    if args.f:
+        try:
+            mail, password = [line.strip() for line in args.f if line.strip()]
+        except ValueError:
+            print("Error: Credentials file must have mail and password each on a separate line!")
+            return
+    else:
+        mail, password = get_credentials()
+
+    # Start a Firefox or Chrome driver
+    if args.chrome:
+        options = webdriver.ChromeOptions()
+        options.set_headless(not args.head)
+        driver = webdriver.Chrome(chrome_options=options)
+    else:
+        options = webdriver.FirefoxOptions()
+        options.set_headless(not args.head)
+        driver = webdriver.Firefox(firefox_options=options)
 
     # Start headless driver and access user page
-    options = webdriver.FirefoxOptions()
-    options.set_headless(True)
-    driver = webdriver.Firefox(firefox_options=options)
     driver.get(BASE_URL)
 
     # Set implicit wait in case elements are not readily available
