@@ -64,7 +64,7 @@ def renew_ads_in_page(driver, id_list, sleep_time=.5):
         sleep(sleep_time)
 
 
-def renew_ads(driver, sleep_time=1):
+def renew_ads(driver, sleep_time=1, quiet=False):
     """With the driver on the first ad page, renews all ads on all pages.
 
     A sleep time can be supplied to wait between page switching and not raise any suspicion.
@@ -76,12 +76,21 @@ def renew_ads(driver, sleep_time=1):
 
         # If there are no ads in the page, we are done
         if not id_list:
+            if not quiet:
+                print("No more ads found. Finishing...")
             return
 
         # Renew all ads in the current page
+        if not quiet:
+            print("{0} ads found in page {1}. Renewing...".format(
+                len(id_list),
+                page
+            ))
         renew_ads_in_page(driver, id_list)
 
         # Go to the next page
+        if not quiet:
+            print("Done. Going to next page.")
         page += 1
         driver.get(BASE_URL + "?pagina=" + str(page))
         sleep(sleep_time)
@@ -92,6 +101,7 @@ def main():
     parser.add_argument('-f', type=argparse.FileType('r'), help="read credentials from file")
     parser.add_argument('--head', '-H', action='store_true', help="don't run in headless mode")
     parser.add_argument('--chrome', '-c', action='store_true', help="use Chrome webdriver")
+    parser.add_argument('--quiet', '-q', action='store_true', help="run in quiet mode")
 
     args = parser.parse_args()
 
@@ -122,7 +132,7 @@ def main():
     driver.implicitly_wait(5)
 
     login(driver, mail, password)
-    renew_ads(driver)
+    renew_ads(driver, quiet=args.quiet)
 
     driver.quit()
 
