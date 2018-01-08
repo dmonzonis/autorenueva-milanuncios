@@ -64,7 +64,7 @@ def renew_ads_in_page(driver, id_list, sleep_time=.5):
         sleep(sleep_time)
 
 
-def renew_ads(driver, sleep_time=1, quiet=False):
+def renew_ads(driver, sleep_time=.5, quiet=False):
     """With the driver on the first ad page, renews all ads on all pages.
 
     A sleep time can be supplied to wait between page switching and not raise any suspicion.
@@ -86,14 +86,14 @@ def renew_ads(driver, sleep_time=1, quiet=False):
                 len(id_list),
                 page
             ))
-        renew_ads_in_page(driver, id_list)
+        renew_ads_in_page(driver, id_list, sleep_time=sleep_time)
 
         # Go to the next page
         if not quiet:
             print("Done. Going to next page.")
         page += 1
         driver.get(BASE_URL + "?pagina=" + str(page))
-        sleep(sleep_time)
+        sleep(1)
 
 
 def main():
@@ -102,6 +102,8 @@ def main():
     parser.add_argument('--head', '-H', action='store_true', help="don't run in headless mode")
     parser.add_argument('--chrome', '-c', action='store_true', help="use Chrome webdriver")
     parser.add_argument('--quiet', '-q', action='store_true', help="run in quiet mode")
+    parser.add_argument('--wait', '-w', type=float, default=.5,
+                        help="seconds to wait between ads", metavar="t")
 
     args = parser.parse_args()
 
@@ -125,6 +127,8 @@ def main():
         options.set_headless(not args.head)
         driver = webdriver.Firefox(firefox_options=options)
 
+    sleep_time = args.wait
+
     # Start headless driver and access user page
     driver.get(BASE_URL)
 
@@ -132,7 +136,7 @@ def main():
     driver.implicitly_wait(5)
 
     login(driver, mail, password)
-    renew_ads(driver, quiet=args.quiet)
+    renew_ads(driver, sleep_time=sleep_time, quiet=args.quiet)
 
     driver.quit()
 
