@@ -127,7 +127,12 @@ def main():
         options.set_headless(not args.head)
         driver = webdriver.Firefox(firefox_options=options)
 
-    sleep_time = args.wait
+    if args.wait > 0:
+        sleep_time = args.wait
+    else:
+        if not args.quiet:
+            print("Wait time has to be positive! Using the default 1 second.")
+        sleep_time = 1
 
     # Start headless driver and access user page
     driver.get(BASE_URL)
