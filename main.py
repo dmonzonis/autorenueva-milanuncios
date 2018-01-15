@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from time import sleep
+from random import random
 from getpass import getpass
 import argparse
 
@@ -33,12 +34,15 @@ def login(driver, mail, password):
     pwd_box.send_keys(Keys.RETURN)
 
 
-def renew_ads_in_page(driver, id_list, sleep_time=.5):
+def renew_ads_in_page(driver, id_list, sleep_time, quiet=False, random_wait=False):
     """Renew ads from a list containing the full ad IDs.
 
     Iteratively renews all ads from the list, following human-like behavior.
     A sleep time can be supplied to not raise any suspicion.
     """
+    # Initialize wait time variable which may change if random_wait is enabled
+    wait_time = sleep_time
+
     for id in id_list:
         # Get the javascript command for opening the pop-up using only the ID numbers
         open_popup = "ventana('renovar/?id=','{0}')".format(id.text[1:])
@@ -61,10 +65,15 @@ def renew_ads_in_page(driver, id_list, sleep_time=.5):
 
         # Switch back to parent frame
         driver.switch_to_default_content()
-        sleep(sleep_time)
+        if random_wait:
+            # Randomly increase or decrease up to 50% of the original value
+            wait_time = sleep_time * (0.5 + random())
+        if not quiet:
+            print("Waiting {0:.2f} seconds...".format(wait_time))
+        sleep(wait_time)
 
 
-def renew_ads(driver, sleep_time=.5, quiet=False):
+def renew_ads(driver, sleep_time, quiet=False, random_wait=False):
     """With the driver on the first ad page, renews all ads on all pages.
 
     A sleep time can be supplied to wait between page switching and not raise any suspicion.
@@ -86,7 +95,8 @@ def renew_ads(driver, sleep_time=.5, quiet=False):
                 len(id_list),
                 page
             ))
-        renew_ads_in_page(driver, id_list, sleep_time=sleep_time)
+        renew_ads_in_page(driver, id_list, sleep_time=sleep_time, quiet=quiet,
+                          random_wait=random_wait)
 
         # Go to the next page
         if not quiet:
@@ -102,8 +112,9 @@ def main():
     parser.add_argument('--head', '-H', action='store_true', help="don't run in headless mode")
     parser.add_argument('--chrome', '-c', action='store_true', help="use Chrome webdriver")
     parser.add_argument('--quiet', '-q', action='store_true', help="run in quiet mode")
-    parser.add_argument('--wait', '-w', type=float, default=.5,
+    parser.add_argument('--wait', '-w', type=float, default=1,
                         help="seconds to wait between ads", metavar="t")
+    parser.add_argument('--random-wait', action='store_true', help="randomize wait time")
 
     args = parser.parse_args()
 
@@ -141,7 +152,7 @@ def main():
     driver.implicitly_wait(5)
 
     login(driver, mail, password)
-    renew_ads(driver, sleep_time=sleep_time, quiet=args.quiet)
+    renew_ads(driver, sleep_time=sleep_time, quiet=args.quiet, random_wait=args.random_wait)
 
     driver.quit()
 
