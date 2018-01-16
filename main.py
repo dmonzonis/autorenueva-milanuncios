@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
 from time import sleep
 from random import random
 from getpass import getpass
@@ -107,6 +108,10 @@ def renew_ads(driver, sleep_time, quiet=False, random_wait=False):
 
 
 def main():
+    # Check python version
+    if sys.version_info[0] < 3:
+        raise Exception("Old Python version detected. Must be using Python 3 or newer.")
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', type=argparse.FileType('r'), help="read credentials from file")
     parser.add_argument('--head', '-H', action='store_true', help="don't run in headless mode")
