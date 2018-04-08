@@ -34,6 +34,16 @@ def login(driver, mail, password):
     pwd_box.send_keys(password)
     pwd_box.send_keys(Keys.RETURN)
 
+    # Check if login failed
+    try:
+        WebDriverWait(driver, 1).until(
+            EC.alert_is_present()
+        )
+        print("Error: Wrong credentials")
+        return False
+    except Exception:
+        return True
+
 
 def renew_ads_in_page(driver, id_list, sleep_time, quiet=False, random_wait=False):
     """Renew ads from a list containing the full ad IDs.
@@ -156,8 +166,9 @@ def main():
     # Set implicit wait in case elements are not readily available
     driver.implicitly_wait(5)
 
-    login(driver, mail, password)
-    renew_ads(driver, sleep_time=sleep_time, quiet=args.quiet, random_wait=args.random_wait)
+    if login(driver, mail, password):
+        # If login was successful, renew ads
+        renew_ads(driver, sleep_time=sleep_time, quiet=args.quiet, random_wait=args.random_wait)
 
     driver.quit()
 
