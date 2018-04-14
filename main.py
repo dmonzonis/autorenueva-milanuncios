@@ -77,8 +77,8 @@ def renew_ads_in_page(driver, id_list, sleep_time, quiet=False, random_wait=Fals
         # Switch back to parent frame
         driver.switch_to_default_content()
         if random_wait:
-            # Randomly increase or decrease up to 50% of the original value
-            wait_time = sleep_time * (0.5 + random())
+            # Randomly increase or decrease up to 10% of the original value
+            wait_time = sleep_time * (0.9 + random() * 0.2)
         if not quiet:
             print("Waiting {0:.2f} seconds...".format(wait_time))
         sleep(wait_time)
