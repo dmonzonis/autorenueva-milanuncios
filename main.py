@@ -46,6 +46,29 @@ def login(driver, mail, password):
         return True
 
 
+def can_renew(driver, id):
+    """Check whether or not the ad can be renewed.
+
+    Ads can be renewed after at least 20 hours after the last renew.
+    This function will return True if the ad was renewed over 20 hours ago,
+    and False otherwise.
+    """
+    id = "sp" + id
+    try:
+        time_text = driver.find_element_by_xpath(
+            f"//span[@id=\"{id}\"]//div[@class=\"x6\"]"
+        ).text
+        time_value, unit = time_text.split()
+        time_value = int(time_value)
+        if unit == "días":
+            return True
+        if unit == "horas" and time_value >= 20:
+            return True
+        return False
+    except Exception:
+        return False
+
+
 def renew_ads_in_page(driver, id_list, sleep_time, quiet=False, random_wait=False):
     """Renew ads from a list containing the full ad IDs.
 
@@ -56,8 +79,16 @@ def renew_ads_in_page(driver, id_list, sleep_time, quiet=False, random_wait=Fals
     wait_time = sleep_time
 
     for id in id_list:
+        id = id.text[1:]
+
+        # Skip ads that can't be renewed yet
+        if not can_renew(driver, id):
+            if not quiet:
+                print(f"Skipping ad with id {id} since it can't be renewed yet")
+            continue
+
         # Get the javascript command for opening the pop-up using only the ID numbers
-        open_popup = f"ventana('renovar/?id=','{id.text[1:]}')"
+        open_popup = f"ventana('renovar/?id=','{id}')"
         driver.execute_script(open_popup)
 
         # Switch to pop-up and click renew link
