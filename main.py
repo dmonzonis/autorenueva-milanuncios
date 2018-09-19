@@ -42,6 +42,7 @@ def login(driver, mail, password):
         print("Error: Wrong credentials")
         return False
     except Exception:
+        print(f"Successful login to {mail}")
         return True
 
 
@@ -56,7 +57,7 @@ def renew_ads_in_page(driver, id_list, sleep_time, quiet=False, random_wait=Fals
 
     for id in id_list:
         # Get the javascript command for opening the pop-up using only the ID numbers
-        open_popup = "ventana('renovar/?id=','{0}')".format(id.text[1:])
+        open_popup = f"ventana('renovar/?id=','{id.text[1:]}')"
         driver.execute_script(open_popup)
 
         # Switch to pop-up and click renew link
@@ -80,7 +81,7 @@ def renew_ads_in_page(driver, id_list, sleep_time, quiet=False, random_wait=Fals
             # Randomly increase or decrease up to 10% of the original value
             wait_time = sleep_time * (0.9 + random() * 0.2)
         if not quiet:
-            print("Waiting {0:.2f} seconds...".format(wait_time))
+            print(f"Waiting {wait_time:.2f} seconds...")
         sleep(wait_time)
 
 
@@ -102,10 +103,7 @@ def renew_ads(driver, sleep_time, quiet=False, random_wait=False):
 
         # Renew all ads in the current page
         if not quiet:
-            print("{0} ads found in page {1}. Renewing...".format(
-                len(id_list),
-                page
-            ))
+            print(f"{len(id_list)} ads found in page {page}. Renewing...")
         renew_ads_in_page(driver, id_list, sleep_time=sleep_time, quiet=quiet,
                           random_wait=random_wait)
 
