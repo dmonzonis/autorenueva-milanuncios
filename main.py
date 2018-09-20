@@ -60,9 +60,9 @@ def can_renew(driver, id):
         ).text
         time_value, unit = time_text.split()
         time_value = int(time_value)
-        if unit == "días":
+        if unit == "día" or unit == "días":
             return True
-        if unit == "horas" and time_value >= 20:
+        if unit == "hora" or (unit == "horas" and time_value >= 20):
             return True
         return False
     except Exception:
