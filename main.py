@@ -112,7 +112,7 @@ def renew_ads_in_page(driver, id_list, sleep_time, quiet=False, random_wait=Fals
             # Randomly increase or decrease up to 10% of the original value
             wait_time = sleep_time * (0.9 + random() * 0.2)
         if not quiet:
-            print(f"Waiting {wait_time:.2f} seconds...")
+            print(f"Ad {id} renewed. Waiting {wait_time:.2f} seconds...")
         sleep(wait_time)
 
 
