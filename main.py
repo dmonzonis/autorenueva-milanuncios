@@ -2,10 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import os
+from datetime import datetime
 from time import sleep
 from random import random
 from getpass import getpass
 import argparse
+import logging
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -39,10 +42,10 @@ def login(driver, mail, password):
         WebDriverWait(driver, 1).until(
             EC.alert_is_present()
         )
-        print("Error: Wrong credentials")
+        logging.error("Error: Wrong credentials")
         return False
     except Exception:
-        print(f"Successful login to {mail}")
+        logging.info(f"Successful login to {mail}")
         return True
 
 
@@ -84,7 +87,8 @@ def renew_ads_in_page(driver, id_list, sleep_time, quiet=False, random_wait=Fals
         # Skip ads that can't be renewed yet
         if not can_renew(driver, id):
             if not quiet:
-                print(f"Skipping ad with id {id} since it can't be renewed yet")
+                logging.info(
+                    f"Skipping ad with id {id} since it can't be renewed yet")
             continue
 
         # Get the javascript command for opening the pop-up using only the ID numbers
@@ -112,7 +116,8 @@ def renew_ads_in_page(driver, id_list, sleep_time, quiet=False, random_wait=Fals
             # Randomly increase or decrease up to 10% of the original value
             wait_time = sleep_time * (0.9 + random() * 0.2)
         if not quiet:
-            print(f"Ad {id} renewed. Waiting {wait_time:.2f} seconds...")
+            logging.info(
+                f"Ad {id} renewed. Waiting {wait_time:.2f} seconds...")
         sleep(wait_time)
 
 
@@ -129,45 +134,74 @@ def renew_ads(driver, sleep_time, quiet=False, random_wait=False):
         # If there are no ads in the page, we are done
         if not id_list:
             if not quiet:
-                print("No more ads found. Finishing...")
+                logging.info("No more ads found. Finishing...")
             return
 
         # Renew all ads in the current page
         if not quiet:
-            print(f"{len(id_list)} ads found in page {page}. Renewing...")
+            logging.info(
+                f"{len(id_list)} ads found in page {page}. Renewing...")
         renew_ads_in_page(driver, id_list, sleep_time=sleep_time, quiet=quiet,
                           random_wait=random_wait)
 
         # Go to the next page
         if not quiet:
-            print("Done. Going to next page.")
+            logging.info("Done. Going to next page.")
         page += 1
         driver.get(BASE_URL + "?pagina=" + str(page))
         sleep(1)
 
 
+def setup_logger(path=None):
+    # We must have write permissions on the path
+    if path is not None and os.access(path, os.W_OK):
+        # Logger will use log file in the path
+        filename = datetime.now().strftime('%Y%m%d%H%M') + '.log'
+        logging.basicConfig(filename=os.path.join(path, filename),
+                            format='%(asctime)s:%(message)s',
+                            datefmt='%H:%M:%S',
+                            level=logging.INFO)
+    else:
+        # Logger will print to stdout
+        logging.basicConfig(format='%(asctime)s %(message)s',
+                            datefmt='%H:%M:%S',
+                            level=logging.INFO)
+
+
 def main():
     # Check python version
     if sys.version_info[0] < 3:
-        raise Exception("Old Python version detected. Must be using Python 3 or newer.")
+        raise Exception(
+            "Old Python version detected. Must be using Python 3 or newer.")
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', type=argparse.FileType('r'), help="read credentials from file")
-    parser.add_argument('--head', '-H', action='store_true', help="don't run in headless mode")
-    parser.add_argument('--chrome', '-c', action='store_true', help="use Chrome webdriver")
-    parser.add_argument('--quiet', '-q', action='store_true', help="run in quiet mode")
+    parser.add_argument('-f', type=argparse.FileType('r'),
+                        help="read credentials from file")
+    parser.add_argument('--head', '-H', action='store_true',
+                        help="don't run in headless mode")
+    parser.add_argument('--chrome', '-c', action='store_true',
+                        help="use Chrome webdriver")
+    parser.add_argument('--quiet', '-q', action='store_true',
+                        help="run in quiet mode")
     parser.add_argument('--wait', '-w', type=float, default=1,
                         help="seconds to wait between ads", metavar="t")
-    parser.add_argument('--random-wait', action='store_true', help="randomize wait time")
+    parser.add_argument('--random-wait', action='store_true',
+                        help="randomize wait time")
+    parser.add_argument(
+        '--log', '-l', help="path in which to save logs, if not set stdout will be used")
 
     args = parser.parse_args()
+
+    # Setup logger
+    setup_logger(args.log)
 
     # Get user credentials
     if args.f:
         try:
             mail, password = [line.strip() for line in args.f if line.strip()]
         except ValueError:
-            print("Error: Credentials file must have mail and password each on a separate line!")
+            logging.error(
+                "Error: Credentials file must have mail and password each on a separate line!")
             return
     else:
         mail, password = get_credentials()
@@ -186,7 +220,8 @@ def main():
         sleep_time = args.wait
     else:
         if not args.quiet:
-            print("Wait time has to be positive! Using the default 1 second.")
+            logging.warning(
+                "Wait time has to be positive! Using the default 1 second.")
         sleep_time = 1
 
     # Start headless driver and access user page
@@ -197,7 +232,8 @@ def main():
 
     if login(driver, mail, password):
         # If login was successful, renew ads
-        renew_ads(driver, sleep_time=sleep_time, quiet=args.quiet, random_wait=args.random_wait)
+        renew_ads(driver, sleep_time=sleep_time,
+                  quiet=args.quiet, random_wait=args.random_wait)
 
     driver.quit()
 
