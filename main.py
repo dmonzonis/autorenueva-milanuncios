@@ -96,7 +96,7 @@ def renew_ads_in_page(driver, id_list, sleep_time, quiet=False, random_wait=Fals
         driver.execute_script(open_popup)
 
         # Switch to pop-up and click renew link
-        driver.switch_to_frame("ifrw")
+        driver.switch_to.frame("ifrw")
         clickable = driver.find_element_by_id("lren")
         clickable.click()
 
@@ -111,7 +111,7 @@ def renew_ads_in_page(driver, id_list, sleep_time, quiet=False, random_wait=Fals
             pass
 
         # Switch back to parent frame
-        driver.switch_to_default_content()
+        driver.switch_to.default_content()
         if random_wait:
             # Randomly increase or decrease up to 10% of the original value
             wait_time = sleep_time * (0.9 + random() * 0.2)
@@ -209,12 +209,12 @@ def main():
     # Start a Firefox or Chrome driver
     if args.chrome:
         options = webdriver.ChromeOptions()
-        options.set_headless(not args.head)
-        driver = webdriver.Chrome(chrome_options=options)
+        options.headless = not args.head
+        driver = webdriver.Chrome(options=options)
     else:
         options = webdriver.FirefoxOptions()
-        options.set_headless(not args.head)
-        driver = webdriver.Firefox(firefox_options=options)
+        options.headless = not args.head
+        driver = webdriver.Firefox(options=options)
 
     if args.wait > 0:
         sleep_time = args.wait
